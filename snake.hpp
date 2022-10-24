@@ -14,21 +14,13 @@ struct Point
 struct Snake
 {
     Point m_head;
+    Point m_tail;
     std::vector<Point> m_body;
     char m_headChar;
     char m_bodyChar;
 
-    Snake(){};
-    Snake(int y, int x, char headChar, char bodyChar)
-    {
-        m_bodyChar = bodyChar;
-        m_headChar = headChar;
-        m_head = (Point){y, x};
-        for (size_t i = 0; i < 5; i++)
-        {
-            m_body.push_back((Point){y, x+i});
-        }
-    };
+    Snake();
+    Snake(int y, int x, char headChar, char bodyChar);
 };
 
 class SnakeGame
@@ -36,6 +28,7 @@ class SnakeGame
 private:
     int points, speed, maxwidth, maxheight;
     int game_max_x, game_max_y;
+    int delay;
 
     char direction, foodChar;
 
