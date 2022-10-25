@@ -6,7 +6,7 @@ Snake::Snake(int y, int x, char headChar, char bodyChar)
     m_bodyChar = bodyChar;
     m_headChar = headChar;
     m_head = (Point){y, x};
-    for (size_t i = 0; i < 5; i++)
+    for (size_t i = 0; i < 10; i++)
     {
         m_body.push_back((Point){y, x + i});
     }
@@ -24,6 +24,7 @@ SnakeGame::SnakeGame()
     curs_set(0);
     delay = 100000;
     direction = 'l';
+    points = 0;
 
     getmaxyx(stdscr, maxheight, maxwidth);
     int borderGameY = maxheight - (maxheight * 0.1);
@@ -48,18 +49,37 @@ SnakeGame::SnakeGame()
 
     mvwaddch(game, m_snake.m_head.y, m_snake.m_head.x, m_snake.m_headChar);
 
-    for (size_t i = 0; i < 5; i++)
-    {
-        createFood();
-    }
+    createFood();
 
     updateSnakePosition();
 
     mvwprintw(scoreboard, 5, 5, "Direction: %c", direction);
+    mvwprintw(scoreboard, 5, 20, "Points: %d", points);
+    mvwprintw(scoreboard, 5, 80, "Doubled: %s", doubled ? "Get the point to doubled again" : "Double if U are not a pussy!!!");
+
     wrefresh(game);
     wrefresh(scoreboard);
     getch();
 }
+
+bool SnakeGame::collision()
+{
+
+    if (!(m_snake.m_head.x == game_max_x || m_snake.m_head.y == game_max_y || m_snake.m_head.x == 0 || m_snake.m_head.y == 0))
+    {
+        if (m_snake.m_head == food)
+        {
+            get = true;
+            createFood();
+            mvwprintw(scoreboard, 5, 20, "Points: %d", points += 100);
+            wrefresh(scoreboard);
+            delay -= 1000;
+            doubled = false;
+        }
+        return false;
+    }
+    return true;
+};
 
 void SnakeGame::createFood()
 {
@@ -76,6 +96,9 @@ void SnakeGame::createFood()
             continue;
         }
 
+        food = (Point){randY, randX};
+        // food.x = randX;
+        // food.y = randY;
         wrefresh(game);
         break;
     }
@@ -85,10 +108,13 @@ void SnakeGame::updateSnakePosition()
 {
 
     moveSnake();
-
-    mvwaddch(game, m_snake.m_tail.y, m_snake.m_tail.x, ' ');
-    m_snake.m_body.pop_back();
-    m_snake.m_tail = m_snake.m_body[m_snake.m_body.size() - 1];
+    collision();
+    if (!get)
+    {
+        mvwaddch(game, m_snake.m_tail.y, m_snake.m_tail.x, ' ');
+        m_snake.m_body.pop_back();
+        m_snake.m_tail = m_snake.m_body[m_snake.m_body.size() - 1];
+    }
 
     switch (direction)
     {
@@ -99,11 +125,12 @@ void SnakeGame::updateSnakePosition()
         m_snake.m_body.insert(m_snake.m_body.begin(), (Point){m_snake.m_body[0].y, m_snake.m_body[0].x - 1});
         break;
 
-        // case 'r':
-        //     mvwaddch(game, m_snake.m_head.y, m_snake.m_head.x + 1, m_snake.m_headChar);
-        //     mvwaddch(game, m_snake.m_head.y, m_snake.m_head.x, m_snake.m_bodyChar);
-        //     mvwaddch(game, m_snake.m_tail.y, m_snake.m_tail.x - 1, ' ');
-        //     break;
+    case 'r':
+        mvwaddch(game, m_snake.m_head.y, m_snake.m_head.x + 1, m_snake.m_headChar);
+        mvwaddch(game, m_snake.m_head.y, m_snake.m_head.x, m_snake.m_bodyChar);
+        m_snake.m_head.x = m_snake.m_head.x + 1;
+        m_snake.m_body.insert(m_snake.m_body.begin(), (Point){m_snake.m_body[0].y, m_snake.m_body[0].x + 1});
+        break;
 
     case 'u':
         mvwaddch(game, m_snake.m_head.y - 1, m_snake.m_head.x, m_snake.m_headChar);
@@ -112,13 +139,15 @@ void SnakeGame::updateSnakePosition()
         m_snake.m_body.insert(m_snake.m_body.begin(), (Point){m_snake.m_body[0].y - 1, m_snake.m_body[0].x});
         break;
 
-        // default:
-        //     mvwaddch(game, m_snake.m_head.y, m_snake.m_head.x - 1, m_snake.m_headChar);
-        //     mvwaddch(game, m_snake.m_head.y, m_snake.m_head.x, m_snake.m_bodyChar);
-        //     mvwaddch(game, m_snake.m_tail.y, m_snake.m_tail.x + 1, ' ');
-        //     break;
+    case 'd':
+        mvwaddch(game, m_snake.m_head.y + 1, m_snake.m_head.x, m_snake.m_headChar);
+        mvwaddch(game, m_snake.m_head.y, m_snake.m_head.x, m_snake.m_bodyChar);
+        m_snake.m_head.y = m_snake.m_head.y + 1;
+        m_snake.m_body.insert(m_snake.m_body.begin(), (Point){m_snake.m_body[0].y + 1, m_snake.m_body[0].x});
+        break;
     }
     wrefresh(game);
+    get = false;
 }
 
 void SnakeGame::moveSnake()
@@ -151,20 +180,32 @@ void SnakeGame::moveSnake()
             direction = 'r';
         }
         break;
-    case KEY_BACKSPACE:
+    case 'q':
         direction = 'q';
         break;
 
-        // default:
-        //     break;
+    case ' ':
+        if (!doubled)
+        {
+            delay /= 2;
+            points *= 2;
+            doubled = true;
+        }
+        mvwprintw(scoreboard, 5, 50, "Doubled: %s", "BLOCKED");
+        break;
     }
 
     mvwprintw(scoreboard, 5, 5, "Direction: %c", direction);
+    mvwprintw(scoreboard, 5, 20, "Points: %d", points);
+    mvwprintw(scoreboard, 5, 80, "Doubled: %s", doubled ? "Get the point to doubled again" : "Double if U are not a pussy!!!");
+
     wrefresh(scoreboard);
 }
 
 SnakeGame::~SnakeGame()
 {
+    nodelay(stdscr, false);
+    getch();
     endwin();
 }
 
@@ -172,6 +213,15 @@ void SnakeGame::start()
 {
     while (true)
     {
+        if (direction == 'q')
+            break;
+
+        if (collision())
+        {
+            mvwprintw(game, game_max_y / 2, game_max_x / 2 - 19, "GAME OVER CHAMPS!!");
+            wrefresh(game);
+            break;
+        }
 
         updateSnakePosition();
         usleep(delay);

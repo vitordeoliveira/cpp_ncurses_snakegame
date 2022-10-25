@@ -9,6 +9,12 @@
 struct Point
 {
     int y, x;
+
+    bool operator==(Point p)
+    {
+        return x == p.x && y == p.y;
+    }
+
 };
 
 struct Snake
@@ -32,11 +38,11 @@ private:
 
     char direction, foodChar;
 
+    Point food;
     WINDOW *game;
     WINDOW *scoreboard;
-    bool get;
+    bool get, doubled;
     Snake m_snake;
-    // snakebody food;
     // std::vector<snakebody> snake;
 
     void createFood();
