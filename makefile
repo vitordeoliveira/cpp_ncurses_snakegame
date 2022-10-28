@@ -3,10 +3,13 @@ CFLAGS=-lncurses
 
 all: snake
 
-snake: *.cpp
+release: *.cpp
+	$(CC) $^ $(CFLAGS) -O2 -o $@
+
+snake_debug: *.cpp
 	$(CC) $^ $(CFLAGS) -o $@
 
-run: snake
+run: snake_debug
 	./$^
 
 clean:
