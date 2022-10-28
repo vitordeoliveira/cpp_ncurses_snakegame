@@ -6,7 +6,7 @@ Snake::Snake(int y, int x, char headChar, char bodyChar)
     m_bodyChar = bodyChar;
     m_headChar = headChar;
     m_head = (Point){y, x};
-    for (size_t i = 0; i < 10; i++)
+    for (size_t i = 0; i < 5; i++)
     {
         m_body.push_back((Point){y, x + i});
     }
@@ -64,21 +64,31 @@ SnakeGame::SnakeGame()
 
 bool SnakeGame::collision()
 {
-
-    if (!(m_snake.m_head.x == game_max_x || m_snake.m_head.y == game_max_y || m_snake.m_head.x == 0 || m_snake.m_head.y == 0))
+    if (m_snake.m_head.x == game_max_x-1 || m_snake.m_head.y == game_max_y-1 || m_snake.m_head.x == 0 || m_snake.m_head.y == 0)
     {
-        if (m_snake.m_head == food)
-        {
-            get = true;
-            createFood();
-            mvwprintw(scoreboard, 5, 20, "Points: %d", points += 100);
-            wrefresh(scoreboard);
-            delay -= 1000;
-            doubled = false;
-        }
-        return false;
+        return true;
     }
-    return true;
+
+    for (size_t i = 1; i < m_snake.m_body.size(); i++)
+    {
+
+        if (m_snake.m_head == m_snake.m_body[i])
+        {
+            return true;
+        }
+    }
+
+    if (m_snake.m_head == food)
+    {
+        get = true;
+        createFood();
+        mvwprintw(scoreboard, 5, 20, "Points: %d", points += 100);
+        wrefresh(scoreboard);
+        delay -= 1000;
+        doubled = false;
+    }
+
+    return false;
 };
 
 void SnakeGame::createFood()
@@ -108,7 +118,6 @@ void SnakeGame::updateSnakePosition()
 {
 
     moveSnake();
-    collision();
     if (!get)
     {
         mvwaddch(game, m_snake.m_tail.y, m_snake.m_tail.x, ' ');
@@ -145,7 +154,11 @@ void SnakeGame::updateSnakePosition()
         m_snake.m_head.y = m_snake.m_head.y + 1;
         m_snake.m_body.insert(m_snake.m_body.begin(), (Point){m_snake.m_body[0].y + 1, m_snake.m_body[0].x});
         break;
+
+    case 'q':
+        break;
     }
+
     wrefresh(game);
     get = false;
 }
